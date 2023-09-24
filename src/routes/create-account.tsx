@@ -1,8 +1,13 @@
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { styled } from "styled-components"
 import { auth } from "./firebase";
+import { FirebaseError } from "firebase/app";
+
+// const errors = {
+// 	"auth/email-already-in-use": "이메일이 사용중입니다.",
+// }
 
 const Wrapper = styled.div`
 		height: 100%;
@@ -17,6 +22,7 @@ const Title = styled.h1`
 `;
 const Form = styled.form`
 		margin-top: 50px;
+		margin-bottom: 10px;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
@@ -38,6 +44,13 @@ const Input = styled.input`
 const Error = styled.span`
 		font-weight: 600;
 		color: tomato;
+`;
+
+const Switcher = styled.div`
+    margin-top: 20px;
+    a{
+        color: #1d9bf0;
+    }
 `;
 
 export default function CreateAccount() {
@@ -63,6 +76,7 @@ export default function CreateAccount() {
 
 	const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		setError('');
 		if (isLoading || name === "" || email === "" || password === "") {
 			return;
 		}
@@ -75,7 +89,9 @@ export default function CreateAccount() {
 			});
 			navigate("/");
 		} catch (e) {
-			setError('');
+			if (e instanceof FirebaseError) {
+				setError(e.message);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -90,7 +106,10 @@ export default function CreateAccount() {
 				<Input onChange={onChange} name="password" value={password} placeholder="Password" type="password" required />
 				<Input type="submit" value={isLoading ? "Loading..." : "Create Account"} />
 			</Form>
-			{error === "" ? <Error>{error}</Error> : null}
+			{error !== "" ? <Error>{error}</Error> : null}
+			<Switcher>
+				이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+			</Switcher>
 		</Wrapper>
 	)
 }
